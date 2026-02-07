@@ -1,0 +1,165 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PostMe Letters | Sketchy Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Replace ca-pub-XXXXXXXXXXXXXXXX with your actual publisher ID -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Gochi+Hand&family=Fredoka:wght@300..500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --sketch-red: #F69D8D;
+            --sketch-dark: #333940;
+            --sketch-bg: #FFF9F8;
+        }
+        body {
+            font-family: 'Patrick Hand', cursive;
+            background: var(--sketch-bg);
+            color: var(--sketch-dark);
+            overflow-x: hidden;
+            font-size: 1.1rem;
+            background-image: 
+                radial-gradient(var(--sketch-dark) 0.5px, transparent 0.5px);
+            background-size: 30px 30px;
+            background-attachment: fixed;
+            background-color: var(--sketch-bg);
+            opacity: 1;
+        }
+        .cursive {
+            font-family: 'Gochi Hand', cursive;
+        }
+        .heading-font {
+            font-family: 'Patrick Hand', cursive;
+        }
+        
+        /* Wobbly Sketchy Border */
+        .sketchy-border {
+            border: 2px solid var(--sketch-dark);
+            border-radius: 255px 15px 225px 15px/15px 225px 15px 255px;
+        }
+
+        .sketchy-border-soft {
+            border: 2px solid rgba(51, 57, 64, 0.1);
+            border-radius: 30px 5px 25px 8px/8px 25px 5px 30px;
+        }
+
+        /* Smooth transitions */
+        * {
+            transition: transform 0.3s ease-out, opacity 0.3s ease-out, background-color 0.3s ease;
+        }
+
+        @keyframes float-gentle {
+            0% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-8px) rotate(1deg); }
+            100% { transform: translateY(0px) rotate(0deg); }
+        }
+        .animate-float-gentle {
+            animation: float-gentle 4s ease-in-out infinite;
+        }
+
+        @keyframes wiggle-gentle {
+            0%, 100% { transform: rotate(-3deg); }
+            50% { transform: rotate(3deg); }
+        }
+        .animate-wiggle-gentle {
+            animation: wiggle-gentle 3s ease-in-out infinite;
+        }
+
+        @keyframes flag-bob {
+            0%, 100% { transform: rotate(-45deg) translateY(0) scale(1.1); }
+            50% { transform: rotate(-45deg) translateY(-10px) scale(1.15); }
+        }
+        .animate-flag-bob {
+            animation: flag-bob 2s ease-in-out infinite;
+        }
+
+        @keyframes shimmer-magic {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        .magic-shimmer {
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            background-size: 200% 100%;
+            animation: shimmer-magic 3s infinite linear;
+        }
+
+        @keyframes fade-in-up {
+            0% { transform: translateY(15px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+        .view-transition {
+            animation: fade-in-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes paper-plane-fly {
+            0% { transform: translate(0, 0) rotate(0); opacity: 1; }
+            100% { transform: translate(150px, -150px) rotate(20deg); opacity: 0; }
+        }
+        .animate-fly {
+            animation: paper-plane-fly 1.2s ease-in forwards;
+        }
+
+        /* Bursting letters animation */
+        @keyframes letter-pop-out {
+            0% { 
+                transform: translate(0, 0) scale(0) rotate(0deg); 
+                opacity: 0; 
+            }
+            20% { 
+                opacity: 1; 
+            }
+            100% { 
+                transform: translate(var(--tx), var(--ty)) scale(1.2) rotate(var(--tr)); 
+                opacity: 0; 
+            }
+        }
+        .animate-letter-pop {
+            animation: letter-pop-out 1.2s cubic-bezier(0.25, 1, 0.5, 1) infinite;
+        }
+
+        .sketch-shadow {
+            box-shadow: 8px 8px 0px rgba(51, 57, 64, 0.1);
+        }
+
+        .doodle-float {
+            animation: float-gentle 6s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        input::placeholder, textarea::placeholder {
+            font-family: 'Patrick Hand', cursive;
+            opacity: 0.4;
+        }
+
+        /* Hand-drawn style lines */
+        .sketchy-underline {
+            background-image: linear-gradient(120deg, #F69D8D 0%, #F69D8D 100%);
+            background-repeat: no-repeat;
+            background-size: 100% 0.2em;
+            background-position: 0 88%;
+            transition: background-size 0.25s ease-in;
+        }
+
+        input, textarea, button {
+            font-family: inherit;
+        }
+    </style>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.2.4",
+    "react/": "https://esm.sh/react@^19.2.4/",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "@google/genai": "https://esm.sh/@google/genai@^1.40.0",
+    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@^2.45.0"
+  }
+}
+</script>
+</head>
+<body class="selection:bg-red-200">
+    <div id="root"></div>
+</body>
+</html>
