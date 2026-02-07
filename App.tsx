@@ -23,33 +23,44 @@ const App: React.FC = () => {
 
   // Initialize Session
   useEffect(() => {
+    let isMounted = true;
     const initSession = async () => {
-      const savedId = storage.getSessionUserId();
-      if (savedId) {
-        const profile = await storage.getProfile(savedId);
-        if (profile) {
-          setCurrentUser(profile);
-          const initialLetters = await storage.getLetters(profile.userId);
-          setLetters(initialLetters);
+      try {
+        const savedId = storage.getSessionUserId();
+        if (savedId && isMounted) {
+          const profile = await storage.getProfile(savedId);
+          if (profile && isMounted) {
+            setCurrentUser(profile);
+            const initialLetters = await storage.getLetters(profile.userId);
+            if (isMounted) setLetters(initialLetters);
+          } else {
+            storage.logout();
+          }
         }
+      } catch (err) {
+        console.error("Initialization error:", err);
+      } finally {
+        if (isMounted) setIsLoading(false);
       }
-      setIsLoading(false);
     };
     initSession();
+    return () => { isMounted = false; };
   }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newUserId.trim()) return;
+    const cleanId = newUserId.trim();
+    if (!cleanId) return;
     
     setIsLoading(true);
     try {
-      const user = await storage.ensureUser(newUserId);
+      const user = await storage.ensureUser(cleanId);
       setCurrentUser(user);
       const initialLetters = await storage.getLetters(user.userId);
       setLetters(initialLetters);
       audioService.playOpen();
     } catch (err) {
+      console.error("Login error:", err);
       alert("Something went wrong joining the PostMe world!");
     } finally {
       setIsLoading(false);
@@ -62,11 +73,12 @@ const App: React.FC = () => {
     audioService.playOpen();
     
     try {
-      // Simulate checking delay for charm
       await new Promise(resolve => setTimeout(resolve, 1500));
       const freshLetters = await storage.getLetters(currentUser.userId);
       setLetters(freshLetters);
       setView(ViewState.INBOX);
+    } catch (err) {
+      console.error("Error checking mail:", err);
     } finally {
       setIsCheckingMail(false);
     }
@@ -91,9 +103,9 @@ const App: React.FC = () => {
       await storage.saveLetter(newLetter);
       setShowCompose(false);
       
-      // Handle AI Pen Pal
       const target = to.toLowerCase().trim();
-      if (target === 'postbot' || target === 'stardust' || target === 'gigglebot') {
+      const botNames = ['postbot', 'stardust', 'gigglebot'];
+      if (botNames.includes(target)) {
         const replyContent = await aiService.generateReply(content, currentUser.userId);
         const aiLetter: Letter = {
           id: crypto.randomUUID(),
@@ -107,9 +119,11 @@ const App: React.FC = () => {
         };
         
         setTimeout(async () => {
-          await storage.saveLetter(aiLetter);
-          setLetters(prev => [aiLetter, ...prev]);
-          audioService.playNotify();
+          try {
+            await storage.saveLetter(aiLetter);
+            setLetters(prev => [aiLetter, ...prev]);
+            audioService.playNotify();
+          } catch (e) {}
         }, 2500);
       }
     } catch (err) {
@@ -118,10 +132,12 @@ const App: React.FC = () => {
   };
 
   const deleteLetter = async (id: string) => {
-    audioService.playDelete();
-    await storage.deleteLetter(id);
-    setLetters(prev => prev.filter(l => l.id !== id));
-    setSelectedLetter(null);
+    try {
+      audioService.playDelete();
+      await storage.deleteLetter(id);
+      setLetters(prev => prev.filter(l => l.id !== id));
+      setSelectedLetter(null);
+    } catch (e) {}
   };
 
   const handleLogout = () => {
@@ -136,8 +152,10 @@ const App: React.FC = () => {
     audioService.playOpen();
     setSelectedLetter(letter);
     if (!letter.isRead) {
-      await storage.markAsRead(letter.id);
-      setLetters(prev => prev.map(l => l.id === letter.id ? { ...l, isRead: true } : l));
+      try {
+        await storage.markAsRead(letter.id);
+        setLetters(prev => prev.map(l => l.id === letter.id ? { ...l, isRead: true } : l));
+      } catch (e) {}
     }
   };
 
@@ -245,7 +263,6 @@ const App: React.FC = () => {
                )}
             </div>
 
-            {/* Ad Banner on Home Page */}
             <AdBanner />
           </div>
         )}
@@ -305,7 +322,6 @@ const App: React.FC = () => {
               </div>
             )}
 
-            {/* Ad Banner at the bottom of the Inbox */}
             {letters.length > 0 && <AdBanner />}
           </div>
         )}

@@ -3,70 +3,122 @@ import { Letter, UserProfile } from '../types';
 import { supabase } from './supabase';
 
 const USER_SESSION_KEY = 'postme_session_userid';
+const LOCAL_LETTERS_KEY = 'postme_local_letters';
+const LOCAL_PROFILES_KEY = 'postme_local_profiles';
+
+// Helper to check if Supabase is properly configured with real values
+const isSupabaseConfigured = () => {
+  try {
+    const url = (process.env as any)?.SUPABASE_URL;
+    const key = (process.env as any)?.SUPABASE_ANON_KEY;
+    
+    return (
+      url && 
+      key && 
+      url.includes('supabase.co') && 
+      !url.includes('your-project') &&
+      !url.includes('placeholder')
+    );
+  } catch {
+    return false;
+  }
+};
 
 export const storage = {
-  // Letters from Supabase
   getLetters: async (userId: string): Promise<Letter[]> => {
-    const { data, error } = await supabase
-      .from('letters')
-      .select('*')
-      .eq('to', userId)
-      .order('timestamp', { ascending: false });
+    if (isSupabaseConfigured()) {
+      try {
+        const { data, error } = await supabase
+          .from('letters')
+          .select('*')
+          .eq('to', userId)
+          .order('timestamp', { ascending: false });
 
-    if (error) {
-      console.error('Error fetching letters:', error);
-      return [];
+        if (!error && data) return data;
+      } catch (e) {
+        console.warn('Supabase fetch failed, using local fallback');
+      }
     }
-    return data || [];
+
+    const localData = localStorage.getItem(LOCAL_LETTERS_KEY);
+    const allLetters: Letter[] = localData ? JSON.parse(localData) : [];
+    return allLetters
+      .filter(l => l.to === userId.toLowerCase().trim())
+      .sort((a, b) => b.timestamp - a.timestamp);
   },
   
   saveLetter: async (letter: Letter) => {
-    const { error } = await supabase
-      .from('letters')
-      .insert([letter]);
-
-    if (error) {
-      console.error('Error saving letter:', error);
-      throw error;
+    if (isSupabaseConfigured()) {
+      try {
+        await supabase.from('letters').insert([letter]);
+      } catch (e) {
+        console.warn('Supabase save failed');
+      }
     }
+
+    const localData = localStorage.getItem(LOCAL_LETTERS_KEY);
+    const allLetters: Letter[] = localData ? JSON.parse(localData) : [];
+    allLetters.push(letter);
+    localStorage.setItem(LOCAL_LETTERS_KEY, JSON.stringify(allLetters));
   },
 
   markAsRead: async (id: string) => {
-    const { error } = await supabase
-      .from('letters')
-      .update({ isRead: true })
-      .eq('id', id);
+    if (isSupabaseConfigured()) {
+      try {
+        await supabase.from('letters').update({ isRead: true }).eq('id', id);
+      } catch (e) {}
+    }
 
-    if (error) {
-      console.error('Error marking as read:', error);
+    const localData = localStorage.getItem(LOCAL_LETTERS_KEY);
+    if (localData) {
+      const allLetters: Letter[] = JSON.parse(localData);
+      const index = allLetters.findIndex(l => l.id === id);
+      if (index !== -1) {
+        allLetters[index].isRead = true;
+        localStorage.setItem(LOCAL_LETTERS_KEY, JSON.stringify(allLetters));
+      }
     }
   },
 
   deleteLetter: async (id: string) => {
-    const { error } = await supabase
-      .from('letters')
-      .delete()
-      .eq('id', id);
+    if (isSupabaseConfigured()) {
+      try {
+        await supabase.from('letters').delete().eq('id', id);
+      } catch (e) {}
+    }
 
-    if (error) {
-      console.error('Error deleting letter:', error);
+    const localData = localStorage.getItem(LOCAL_LETTERS_KEY);
+    if (localData) {
+      const allLetters: Letter[] = JSON.parse(localData);
+      const filtered = allLetters.filter(l => l.id !== id);
+      localStorage.setItem(LOCAL_LETTERS_KEY, JSON.stringify(filtered));
     }
   },
 
-  // Profile Management
   getProfile: async (userId: string): Promise<UserProfile | null> => {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('username', userId.toLowerCase())
-      .single();
+    const cleanId = userId.toLowerCase().trim();
+    
+    if (isSupabaseConfigured()) {
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('username', cleanId)
+          .single();
 
-    if (error) return null;
-    return {
-      userId: data.username,
-      name: data.username,
-      avatar: data.avatar || '💌'
-    };
+        if (!error && data) {
+          return {
+            userId: data.username,
+            name: data.username,
+            avatar: data.avatar || '💌'
+          };
+        }
+      } catch (e) {}
+    }
+
+    const localProfiles = localStorage.getItem(LOCAL_PROFILES_KEY);
+    const profiles: Record<string, UserProfile> = localProfiles ? JSON.parse(localProfiles) : {};
+    return profiles[cleanId] || null;
   },
 
   ensureUser: async (username: string): Promise<UserProfile> => {
@@ -84,23 +136,32 @@ export const storage = {
       avatar: '💌'
     };
 
-    const { error } = await supabase
-      .from('profiles')
-      .insert([{ username: userId, avatar: '💌' }]);
-
-    if (error) {
-      console.error('Error creating profile:', error);
+    if (isSupabaseConfigured()) {
+      try {
+        await supabase.from('profiles').insert([{ username: userId, avatar: '💌' }]);
+      } catch (e) {}
     }
+
+    const localProfiles = localStorage.getItem(LOCAL_PROFILES_KEY);
+    const profiles: Record<string, UserProfile> = localProfiles ? JSON.parse(localProfiles) : {};
+    profiles[userId] = newUser;
+    localStorage.setItem(LOCAL_PROFILES_KEY, JSON.stringify(profiles));
 
     localStorage.setItem(USER_SESSION_KEY, userId);
     return newUser;
   },
 
   getSessionUserId: (): string | null => {
-    return localStorage.getItem(USER_SESSION_KEY);
+    try {
+      return localStorage.getItem(USER_SESSION_KEY);
+    } catch {
+      return null;
+    }
   },
 
   logout: () => {
-    localStorage.removeItem(USER_SESSION_KEY);
+    try {
+      localStorage.removeItem(USER_SESSION_KEY);
+    } catch {}
   }
 };

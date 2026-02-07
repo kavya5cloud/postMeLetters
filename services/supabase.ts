@@ -1,9 +1,18 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-// These should be replaced with actual environment variables or hardcoded if allowed in your context.
-// Assuming they might be provided in process.env for security.
-const supabaseUrl = (process.env as any).SUPABASE_URL || 'https://your-project.supabase.co';
-const supabaseAnonKey = (process.env as any).SUPABASE_ANON_KEY || 'your-anon-key';
+// Safe environment variable access
+const getEnv = (key: string) => {
+  try {
+    return (process.env as any)[key];
+  } catch {
+    return undefined;
+  }
+};
 
+const supabaseUrl = getEnv('SUPABASE_URL') || 'https://placeholder.supabase.co';
+const supabaseAnonKey = getEnv('SUPABASE_ANON_KEY') || 'placeholder-key';
+
+// We create the client, but the storage service will check if it's actually "usable" 
+// before making calls to prevent runtime errors in the console.
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
