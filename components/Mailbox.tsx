@@ -9,50 +9,49 @@ interface MailboxProps {
 }
 
 export const Mailbox: React.FC<MailboxProps> = ({ hasMail, isChecking, onOpen }) => {
-  // Generate random trajectories for flying letters
-  const flyingLetters = [
-    { tx: '-120px', ty: '-200px', tr: '-45deg', delay: '0s' },
-    { tx: '-60px', ty: '-280px', tr: '-20deg', delay: '0.2s' },
-    { tx: '0px', ty: '-320px', tr: '0deg', delay: '0.4s' },
-    { tx: '60px', ty: '-280px', tr: '20deg', delay: '0.6s' },
-    { tx: '120px', ty: '-200px', tr: '45deg', delay: '0.8s' },
-    { tx: '-30px', ty: '-240px', tr: '-10deg', delay: '0.1s' },
+  // varied mail items for the burst
+  const flyingItems = [
+    { char: '✉️', tx: '-140px', ty: '-220px', tr: '-45deg', delay: '0s' },
+    { char: '💌', tx: '-70px', ty: '-300px', tr: '-20deg', delay: '0.15s' },
+    { char: '🧧', tx: '0px', ty: '-340px', tr: '0deg', delay: '0.3s' },
+    { char: '📫', tx: '70px', ty: '-300px', tr: '20deg', delay: '0.45s' },
+    { char: '✉️', tx: '140px', ty: '-220px', tr: '45deg', delay: '0.6s' },
+    { char: '✨', tx: '-50px', ty: '-250px', tr: '-10deg', delay: '0.1s' },
+    { char: '🌸', tx: '50px', ty: '-250px', tr: '10deg', delay: '0.2s' },
+    { char: '💖', tx: '-90px', ty: '-180px', tr: '-30deg', delay: '0.5s' },
   ];
 
   return (
     <div 
       onClick={onOpen}
       className={`relative cursor-pointer transition-all duration-300 group flex flex-col items-center
-        ${isChecking ? 'scale-105' : 'hover:scale-105 active:scale-95'}
+        ${isChecking ? 'scale-110' : 'hover:scale-105 active:scale-95'}
       `}
     >
-      {/* Bursting Letters Animation */}
+      {/* Bursting Letters Animation - Centered around the slot area */}
       {isChecking && (
-        <div className="absolute inset-0 z-40 pointer-events-none">
-          {flyingLetters.map((style, i) => (
+        <div className="absolute left-1/2 top-32 -translate-x-1/2 w-0 h-0 z-40 pointer-events-none">
+          {flyingItems.map((item, i) => (
             <div 
               key={i}
-              className="absolute left-1/2 top-40 -translate-x-1/2 text-4xl animate-letter-pop"
+              className="absolute whitespace-nowrap text-4xl animate-letter-pop"
               style={{ 
-                '--tx': style.tx, 
-                '--ty': style.ty, 
-                '--tr': style.tr,
-                animationDelay: style.delay
+                '--tx': item.tx, 
+                '--ty': item.ty, 
+                '--tr': item.tr,
+                animationDelay: item.delay
               } as React.CSSProperties}
             >
-              ✉️
+              {item.char}
             </div>
           ))}
-          {/* Sparkles too! */}
-          <div className="absolute left-1/2 top-40 -translate-x-1/2 text-2xl animate-letter-pop" style={{ '--tx': '40px', '--ty': '-350px', '--tr': '90deg', animationDelay: '0.3s' } as React.CSSProperties}>✨</div>
-          <div className="absolute left-1/2 top-40 -translate-x-1/2 text-2xl animate-letter-pop" style={{ '--tx': '-40px', '--ty': '-350px', '--tr': '-90deg', animationDelay: '0.7s' } as React.CSSProperties}>✨</div>
         </div>
       )}
 
       {/* The Pillar Box */}
       <div className={`
-        relative w-44 h-80 flex flex-col items-center animate-float-gentle
-        ${isChecking ? 'animate-pulse-soft' : ''}
+        relative w-44 h-80 flex flex-col items-center
+        ${isChecking ? 'animate-shake-mailbox' : 'animate-float-gentle'}
       `}>
         
         {/* Top Tiered Cap */}
@@ -138,7 +137,7 @@ export const Mailbox: React.FC<MailboxProps> = ({ hasMail, isChecking, onOpen })
       `}>
         <div className="bg-white px-4 py-1 rounded-full shadow-sm border-2 border-[#333940]/10 flex items-center gap-2">
            <p className="text-[#333940] font-bold text-sm uppercase tracking-tighter">
-              {isChecking ? "Peeking... 🐾" : "Peek inside!"}
+              {isChecking ? "Checking... 🐾" : "Open Mailbox"}
            </p>
            {!isChecking && hasMail && (
              <span className="w-2 h-2 bg-red-400 rounded-full animate-ping"></span>
